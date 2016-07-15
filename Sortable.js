@@ -416,12 +416,15 @@
 					// If the user moves the pointer or let go the click or touch
 					// before the delay has been reached:
 					// disable the delayed drag
-					_on(ownerDocument, 'mouseup', _this._disableDelayedDrag);
-					_on(ownerDocument, 'touchend', _this._disableDelayedDrag);
-					_on(ownerDocument, 'touchcancel', _this._disableDelayedDrag);
-					_on(ownerDocument, 'mousemove', _this._disableDelayedDrag);
-					_on(ownerDocument, 'touchmove', _this._disableDelayedDrag);
-					_on(ownerDocument, 'pointermove', _this._disableDelayedDrag);
+                    // timeout fix issue #659
+					this._mousemoveFixTimer = setTimeout(function () {
+						_on(ownerDocument, 'mouseup', _this._disableDelayedDrag);
+						_on(ownerDocument, 'touchend', _this._disableDelayedDrag);
+						_on(ownerDocument, 'touchcancel', _this._disableDelayedDrag);
+						_on(ownerDocument, 'mousemove', _this._disableDelayedDrag);
+						_on(ownerDocument, 'touchmove', _this._disableDelayedDrag);
+						_on(ownerDocument, 'pointermove', _this._disableDelayedDrag);
+					}, 0);
 
 					_this._dragStartTimer = setTimeout(dragStartFn, options.delay);
 				} else {
@@ -434,6 +437,7 @@
 			var ownerDocument = this.el.ownerDocument;
 
 			clearTimeout(this._dragStartTimer);
+			clearTimeout(this._mousemoveFixTimer);
 			_off(ownerDocument, 'mouseup', this._disableDelayedDrag);
 			_off(ownerDocument, 'touchend', this._disableDelayedDrag);
 			_off(ownerDocument, 'touchcancel', this._disableDelayedDrag);
@@ -463,11 +467,11 @@
 			}
 
 			try {
-				if (document.selection) {					
-					// Timeout neccessary for IE9					
+				if (document.selection) {
+					// Timeout neccessary for IE9
 					setTimeout(function () {
 						document.selection.empty();
-					});					
+					});
 				} else {
 					window.getSelection().removeAllRanges();
 				}
@@ -829,6 +833,7 @@
 			clearInterval(this._loopId);
 			clearInterval(autoScroll.pid);
 			clearTimeout(this._dragStartTimer);
+			clearTimeout(this._mousemoveFixTimer);
 
 			// Unbind events
 			_off(document, 'mousemove', this._onTouchMove);
@@ -910,7 +915,7 @@
 			this._nulling();
 		},
 
-		_nulling: function() {
+		_nulling: function () {
 			rootEl =
 			dragEl =
 			parentEl =
